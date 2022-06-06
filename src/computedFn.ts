@@ -1,11 +1,13 @@
 import { DeepMap } from "./deepMap"
 import {
+    createAtom,
     IComputedValue,
     IComputedValueOptions,
     computed,
     onBecomeUnobserved,
     _isComputingDerivation,
     isAction,
+    IAtom,
 } from "mobx"
 
 export type IComputedFnOptions<F extends (...args: any[]) => any> = {
@@ -76,8 +78,10 @@ export function computedFn<T extends (...args: any[]) => any>(
         }
         // create new entry
         let latestValue: ReturnType<T> | undefined
+        let atom: IAtom | undefined = createAtom("atom")
         const c = computed(
             () => {
+                atom && atom.reportObserved()
                 return (latestValue = fn.apply(this, args))
             },
             {
@@ -88,10 +92,11 @@ export function computedFn<T extends (...args: any[]) => any>(
         entry.set(c)
         // clean up if no longer observed
         if (!opts.keepAlive)
-            onBecomeUnobserved(c, () => {
+            onBecomeUnobserved(atom, () => {
                 d.entry(args).delete()
                 if (opts.onCleanup) opts.onCleanup(latestValue, ...args)
                 latestValue = undefined
+                atom = undefined
             })
         // return current val
         return c.get()

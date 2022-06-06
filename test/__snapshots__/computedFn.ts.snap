@@ -9,6 +9,9 @@ Object {
     Object {
       "dependencies": Array [
         Object {
+          "name": "atom",
+        },
+        Object {
           "name": "ObservableObject@10.a",
         },
         Object {
